@@ -38,7 +38,7 @@
                     class="btn btn-ghost"
                     :class="{ 'btn-active': $route.path === '/about' }"
                 >
-                  Обо мне
+                  О разработчике
                 </router-link>
               </li>
               <li v-if="user.isAdmin">
