@@ -1,54 +1,65 @@
-const API_BASE = 'https://jsonplaceholder.typicode.com'
+// Вместо JSONPlaceholder
+const API_BASE = 'http://localhost:3000/api';
 
+// Или создайте отдельный файл для API
 export const api = {
-  // Посты
-  async getPosts(limit = null) {
-    const url = limit ? `${API_BASE}/posts?_limit=${limit}` : `${API_BASE}/posts`
-    const response = await fetch(url)
-    return response.json()
+  async request(endpoint, options = {}) {
+    const token = localStorage.getItem('token');
+
+    const headers = {
+      'Content-Type': 'application/json',
+      ...options.headers
+    };
+
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      headers
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Ошибка API');
+    }
+
+    return response.json();
   },
 
-  async getPost(id) {
-    const response = await fetch(`${API_BASE}/posts/${id}`)
-    return response.json()
+  // Методы для постов
+  getPosts(page = 1, limit = 10) {
+    return this.request(`/posts?page=${page}&limit=${limit}`);
   },
 
-  async createPost(postData) {
-    const response = await fetch(`${API_BASE}/posts`, {
+  getPost(id) {
+    return this.request(`/posts/${id}`);
+  },
+
+  createPost(postData) {
+    return this.request('/posts', {
       method: 'POST',
-      headers: {
-        'Content-type': 'application/json',
-      },
       body: JSON.stringify(postData)
-    })
-    return response.json()
+    });
   },
 
-  // Пользователи
-  async getUsers() {
-    const response = await fetch(`${API_BASE}/users`)
-    return response.json()
-  },
-
-  async getUser(id) {
-    const response = await fetch(`${API_BASE}/users/${id}`)
-    return response.json()
-  },
-
-  // Комментарии
-  async getComments(postId) {
-    const response = await fetch(`${API_BASE}/posts/${postId}/comments`)
-    return response.json()
-  },
-
-  async createComment(commentData) {
-    const response = await fetch(`${API_BASE}/comments`, {
+  // Методы для авторизации
+  login(credentials) {
+    return this.request('/auth/login', {
       method: 'POST',
-      headers: {
-        'Content-type': 'application/json',
-      },
-      body: JSON.stringify(commentData)
-    })
-    return response.json()
+      body: JSON.stringify(credentials)
+    });
+  },
+
+  register(userData) {
+    return this.request('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify(userData)
+    });
+  },
+
+  getProfile() {
+    return this.request('/auth/me');
   }
-}
+};
